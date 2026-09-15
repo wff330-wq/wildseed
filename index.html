@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>野種</title>
+<style>
+  :root{
+    --bg:#f7f3ea; --text:#2b2620; --muted:#8a7f6e; --accent:#8b5a2b;
+    --bar:#efe8da; --card:#fffdf8; --border:#e3d9c6;
+  }
+  body.dark{
+    --bg:#15181c; --text:#c9cdd2; --muted:#6b7280; --accent:#c99b6a;
+    --bar:#1d2126; --card:#1a1e23; --border:#2a3038;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Noto Serif TC","Source Han Serif TC","Microsoft JhengHei",serif;
+    transition:background .25s,color .25s;
+  }
+  #progress{
+    position:fixed; top:0; left:0; height:3px; width:0;
+    background:var(--accent); z-index:99; transition:width .1s;
+  }
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    background:var(--bar); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px; padding:8px 14px;
+  }
+  .topbar .title{ font-weight:700; font-size:15px; letter-spacing:1px; white-space:nowrap; }
+  .topbar select{
+    max-width:42vw; padding:4px 6px; border-radius:6px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); font-size:13px;
+  }
+  .btn{
+    border:1px solid var(--border); background:var(--card); color:var(--text);
+    border-radius:6px; padding:4px 10px; cursor:pointer; font-size:13px; white-space:nowrap;
+  }
+  .btn:hover{ border-color:var(--accent); }
+  .btn:disabled{ opacity:.4; cursor:default; }
+  .spacer{flex:1;}
+  main{ max-width:680px; margin:0 auto; padding:76px 22px 60px; }
+  h1.chtitle{ text-align:center; font-size:26px; margin:28px 0 8px; letter-spacing:2px; }
+  .chmeta{ text-align:center; color:var(--muted); font-size:13px; margin-bottom:44px; }
+  .content{ font-size:var(--fs,19px); line-height:2.05; }
+  .content p{ margin:0 0 1.4em; text-indent:2em; }
+  .content h2{
+    font-size:1.25em; margin:2.2em 0 1.2em; letter-spacing:1px;
+    border-left:4px solid var(--accent); padding-left:10px;
+  }
+  .content blockquote{
+    margin:1.2em 0; padding:10px 16px; background:var(--card);
+    border-left:3px solid var(--border); border-radius:0 8px 8px 0;
+  }
+  .content blockquote p{ margin:0 0 .8em; text-indent:0; }
+  .content blockquote p:last-child{ margin-bottom:0; }
+  .content hr{ border:0; border-top:1px dashed var(--border); margin:2.2em auto; width:60%; }
+  .content strong{ color:var(--accent); }
+  .navrow{ display:flex; justify-content:space-between; margin:56px 0 10px; gap:10px; }
+  .navrow .btn{ padding:10px 18px; font-size:14px; }
+  .toc-drawer{
+    position:fixed; top:0; bottom:0; left:-320px; width:300px; z-index:60;
+    background:var(--card); border-right:1px solid var(--border);
+    transition:left .25s; overflow-y:auto; padding:16px;
+  }
+  .toc-drawer.open{ left:0; }
+  .toc-drawer h3{ margin:8px 6px 14px; font-size:15px; }
+  .toc-item{
+    display:block; padding:10px; margin:2px 0; border-radius:8px;
+    color:var(--text); text-decoration:none; font-size:14px; line-height:1.5;
+  }
+  .toc-item:hover{ background:var(--bar); }
+  .toc-item.active{ background:var(--bar); color:var(--accent); font-weight:700; }
+  #mask{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:55; }
+  #mask.open{ display:block; }
+  @media (max-width:600px){ main{ padding:70px 16px 50px; } }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar">
+  <button class="btn" id="tocBtn">目錄</button>
+  <span class="title">野種</span>
+  <select id="chSelect"></select>
+  <span class="spacer"></span>
+  <button class="btn" id="fontDown">A−</button>
+  <button class="btn" id="fontUp">A＋</button>
+  <button class="btn" id="themeBtn">夜間</button>
+</div>
+<div id="mask"></div>
+<div class="toc-drawer" id="tocDrawer"><h3>目錄</h3><div id="tocList"></div></div>
+<main>
+  <h1 class="chtitle" id="chTitle"></h1>
+  <div class="chmeta" id="chMeta"></div>
+  <div class="content" id="content"></div>
+  <div class="navrow">
+    <button class="btn" id="prevBtn">上一章</button>
+    <button class="btn" id="nextBtn">下一章</button>
+  </div>
+</main>
+<script>
+var CHAPTERS = [{"file":"ch001.md","text":"# 第一章 千分之零點零零四\n\n瀾城的雨從傍晚就沒停。江野把貨車停在舊城區一棟寫字樓的後巷，熄匙，等雨細一點。\n\n大廈叫永興，落成於一九九八年。玻璃幕牆有一半是茶色的，隔熱膜爆了邊，翻起來，像一排老人牙。門口值班室亮著一盞黃燈，看更鍾伯探出頭，核對她的工單號。\n\n「二十一樓？」鍾伯說，「那層好靜。你自己上去，小心。」\n\n「有電梯嗎？」\n\n「貨梯能用。客梯壞了兩個月了。」\n\n她問誰在管電梯。鍾伯搖頭，說管理公司三年前散了，這半年都靠「自己好返」——壞幾天，又自己好了。\n\n江野把這句話記在心裡。\n\n二十一樓的機房沒有窗。她戴上頭燈，光柱切進去，照亮一排早已斷電的機櫃。櫃門半開，裡面剩下幾條來不及拆走的跳線，垂著，像晾乾的麵。\n\n這裡從前是證券公司的機房。公司搬走七年，產權轉了三手，最後一手做跨境電商，去年倒了。線沒人拆，也沒人管。清源線務接了單，派她來收。\n\n收線是行話。一條號稱還在運作的線，要有人正式判它死：拆光纖、清配置、拍照、上報，在市政的登記裡把它註銷。城市有一半的網路都是這樣的心肺——早就沒人用，掛在那裡，像無人繼承的舊屋。\n\n江野二十六歲。做這行三年，她有一套自己的規矩：動手之前，先看一遍。\n\n看什麼還活著。\n\n她蹲下來，掀開交接箱的蓋子。灰積了七年，指頭一抹，留下一道乾淨的痕。筆電接上備用埠，掃描器跑起來。螢幕上跳出一行數字：這條線過去六十天的錯誤率。\n\n千分之零點零零四。\n\n她看了兩遍，又按了一次重掃。\n\n死線的錯誤率通常在千分之三上下。那是宇宙的稅，躲不掉——線越舊，雜訊越多，重傳越多，每天晚上都在壞，只是沒有人在乎它壞。千分之零點零零四不是一條死線該有的數字。這是一條有人照顧的線。\n\n這樣的數字，她只見過一次。三年前，第一張工單，一間倒閉的網吧。她照程序上報，清障組第二天來歸零。第三天，那條線就徹底安靜了。她那晚回家，翻來覆去，覺得自己做錯了一件事。\n\n江野往後靠，坐在地上。頭燈的光打在天花管線上，那裡懸著一層薄薄的水汽。\n\n她把耳朵貼在機櫃底板上。裡面有一種極細、極規律的響，密密層層，像一整片草在風裡動——可是風扇早就斷電了，這裡不該有任何聲音。\n\n她查了登記。這條線沒有維護主體，沒有服務合約，沒有任何一個註冊程式掛在上面。她又往下查，查得比工單要求深了兩層。緩衝區裡全是東西，密密麻麻，細得幾乎看不見：有負責傳訊的，有清理殘留的，有專門吃掉壞數據的。程式碼短，活得也短，生出來，做一件事，然後消失。\n\n她放大其中一條。那條小東西正在把她的探測封包拆開，讀完，原樣放回去，順手修好了封包尾部一處過期的校驗。動作乾淨，沒有多餘的一步。\n\n沒有一隻是「維修員」。沒有一隻曉得自己在修一條線。\n\n可是這條線，比城裡的骨幹線還乾淨。\n\n她順手把大廈的其他系統也掃了一遍。消防感應器、貨梯控制板、地下車場的閘機，全是過了保養期的舊貨。它們的故障記錄有一個共同點：每次壞，都在四十八小時內「自行恢復」；恢復的方式不合廠商手冊，也沒有人報修。\n\n像有人扶著整棟樓，不讓它倒。\n\n腰間的對講機響了。\n\n「二十一樓收完沒有？」老麥的聲音混著雨聲。\n\n「還在看。」\n\n「快一點。下雨，今晚還有兩單。」\n\n江野站起來，一腳踩在機櫃底板上，鐵皮悶響。「麥哥，你見過死線的錯誤率千分之零點零零四嗎？」\n\n對講機沉默了幾秒。\n\n「死線不會自己漂亮。」老麥說，「你見到什麼了？」\n\n「沒什麼。可能計數器壞了。」\n\n「計數器不會壞。」老麥說，「拆完就上報，別留手尾。上頭最討厭手尾。」\n\n清源線務的規矩，江野清楚。收線員收不乾淨，清障組就得出動。清障組用的不是刪除，是歸零：一條線被歸零，線上的一切重新變成空白。去年舊城東一棟商廈歸過一次零，之後三個月，那條街的紅綠燈天天出小毛病。有人說巧合。江野不信巧合。\n\n收了線，她按程序做完剩下的：拆光纖，清配置，拍照。差最後一步——按規定，她要提交「徹底清除」申請，讓清障組來做一次格式化。那一趟下來，線上的東西，一個不留。\n\n她沒有提交。\n\n她從背包裡拿出自己的移動硬盤，接上埠，把緩衝區裡那些細小的東西抄了一份。幾萬條，抄了十一分鐘。硬盤發熱，貼在她掌心裡，有一點燙。抄完，拔線、關機、收工具，動作和平時一樣快。\n\n她說不清自己為什麼要抄。也許因為父親從前也做線。也許因為剛才她看著那些小東西，一格一格把一條沒有人要的線維持得那麼乾淨。也許只是覺得，扔了可惜。\n\n下樓的時候雨大了。走廊沒有燈，她靠手機照路，經過十七樓，經過九樓，每一層都是空的。貨梯在五樓停了一下，門開了，沒有人進來，門又關上。她沒有多想。\n\n到了樓下，鍾伯還在值班室看電視。老麥靠在貨車邊抽菸，看她一眼，沒問。\n\n「走了。」他說。\n\n回到住處已經十一點。老樓，六層，沒有電梯，樓梯間的聲控燈一層亮一層滅。她住四樓，兩房一廳，弟弟江潯住大房，她住小的。牆皮起了泡，房東說明年再修，這句話說了三年。\n\n江潯在客廳打遊戲，桌上兩盒外賣，一盒還沒開。他今年十九，大二，暑假住過來。\n\n「姐，飯。」他頭也不抬。\n\n「吃了沒有？」\n\n「等你。」\n\n她坐下，打開飯盒。菜還是熱的。\n\n江潯的螢幕上，關卡難度自動調好了——他死過三次，第四次開始，難度就變得剛好夠他過。他沒有發現。或者發現了，也不在意。\n\n「你那個如願，裝了？」她問。\n\n「全宿舍都在用。」他說，「它幫我排課、寫作業、訂場、約人。前天還幫我回了媽的訊息，媽說我終於懂事了。」\n\n江野夾菜的手停了一下。\n\n「你自己回的？」\n\n「如願寫的。我看過，寫得比我好。」\n\n他笑得挺開心。江野看著他，忽然覺得弟弟離她很遠，隔著一層水。\n\n「姐，你也裝一個。」江潯說，「你成天收那些爛線，累不累。」\n\n「我用不著。」\n\n「它又不收錢。」\n\n「就是因為不收錢。」她說。\n\n江潯沒聽懂，低頭繼續打遊戲。江野也沒有再解釋。\n\n吃完飯，她回房間，把移動硬盤放進抽屜。抽屜裡還有六隻，最舊那隻的標籤用馬克筆寫著日期，是三年前。她從來沒有打開過它們，也從來沒有扔掉。抽屜關上，鎖扣咔的一聲。她沒有開燈，在黑暗裡站了一會兒。\n\n十一點半，她的終端震了一下。如願推來今日總結：四張工單已完成，路線比原計劃省了十八分鐘，明日建議提前二十分鐘出門，有雨。\n\n最下面一行小字：你辛苦了。\n\n她盯著那行字。\n\n準。太準了。\n\n準得她想起樓上那條死線。那條線也是這樣：安安靜靜，把一切安排得剛剛好。\n\n區別在於，一個沒有人叫它做。\n\n另一個，全世界都在用。\n"}];
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function inline(s){ return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+function mdToHtml(md){
+  var lines = md.split(/\r?\n/);
+  var out = []; var i = 0, title = "";
+  if(lines.length && lines[0].indexOf("# ") === 0){ title = lines[0].slice(2).trim(); i = 1; }
+  var inQuote = false, para = [];
+  function flushPara(){ if(para.length){ out.push("<p class='noindent'>"+inline(para.join("<br>"))+"</p>"); para=[]; } }
+  function closeQuote(){ if(inQuote){ out.push("</blockquote>"); inQuote=false; } }
+  for(; i<lines.length; i++){
+    var t = lines[i].trim();
+    if(t === ""){ flushPara(); closeQuote(); continue; }
+    if(t === "---"){ flushPara(); closeQuote(); out.push("<hr>"); continue; }
+    if(t.indexOf("## ") === 0){ flushPara(); closeQuote(); out.push("<h2>"+inline(esc(t.slice(3)))+"</h2>"); continue; }
+    if(t.indexOf("# ") === 0){ flushPara(); closeQuote(); continue; }
+    if(t.indexOf(">") === 0){
+      flushPara();
+      if(!inQuote){ out.push("<blockquote>"); inQuote=true; }
+      var qt = t.replace(/^>\s?/,"");
+      if(qt===""){ out.push("<p style='margin:.2em 0'></p>"); }
+      else{ out.push("<p>"+inline(esc(qt))+"</p>"); }
+      continue;
+    }
+    closeQuote();
+    para.push(esc(t));
+  }
+  flushPara(); closeQuote();
+  return { title: title, html: out.join("\n") };
+}
+
+var cur = 0;
+try{ cur = parseInt(localStorage.getItem("ws_cur")||"0",10)||0; }catch(e){}
+if(cur<0) cur=0; if(cur>=CHAPTERS.length) cur=CHAPTERS.length-1;
+
+var parsed = CHAPTERS.map(function(c){ return mdToHtml(c.text); });
+
+var sel = document.getElementById("chSelect");
+var toc = document.getElementById("tocList");
+parsed.forEach(function(p,idx){
+  var name = p.title || CHAPTERS[idx].file;
+  var o = document.createElement("option");
+  o.value = String(idx); o.textContent = (idx+1)+". "+name;
+  sel.appendChild(o);
+  var a = document.createElement("a");
+  a.href = "javascript:void(0)";
+  a.className = "toc-item"; a.textContent = (idx+1)+". "+name;
+  a.dataset.idx = String(idx);
+  a.onclick = function(){ go(idx); closeToc(); };
+  toc.appendChild(a);
+});
+
+function render(idx){
+  cur = idx;
+  try{ localStorage.setItem("ws_cur", String(idx)); }catch(e){}
+  var p = parsed[idx];
+  document.getElementById("chTitle").textContent = p.title || CHAPTERS[idx].file;
+  document.getElementById("chMeta").textContent = "第 " + (idx+1) + " / " + parsed.length + " 章";
+  document.getElementById("content").innerHTML = p.html;
+  sel.value = String(idx);
+  Array.prototype.forEach.call(toc.children,function(a){
+    a.className = "toc-item" + (parseInt(a.dataset.idx,10)===idx ? " active":"");
+  });
+  document.getElementById("prevBtn").disabled = (idx===0);
+  document.getElementById("nextBtn").disabled = (idx===parsed.length-1);
+  window.scrollTo(0,0);
+}
+function go(idx){ if(idx>=0 && idx<parsed.length) render(idx); }
+
+document.getElementById("prevBtn").onclick = function(){ go(cur-1); };
+document.getElementById("nextBtn").onclick = function(){ go(cur+1); };
+sel.onchange = function(){ go(parseInt(this.value,10)); };
+
+function applyTheme(dark){
+  document.body.classList.toggle("dark", dark);
+  document.getElementById("themeBtn").textContent = dark ? "日間" : "夜間";
+  try{ localStorage.setItem("ws_dark", dark?"1":"0"); }catch(e){}
+}
+document.getElementById("themeBtn").onclick = function(){
+  applyTheme(!document.body.classList.contains("dark"));
+};
+try{ applyTheme(localStorage.getItem("ws_dark")==="1"); }catch(e){}
+
+function applyFs(fs){
+  document.documentElement.style.setProperty("--fs", fs+"px");
+  try{ localStorage.setItem("ws_fs", String(fs)); }catch(e){}
+}
+document.getElementById("fontUp").onclick = function(){
+  var fs = parseInt(localStorage.getItem("ws_fs")||"19",10); applyFs(Math.min(26,fs+1)); };
+document.getElementById("fontDown").onclick = function(){
+  var fs = parseInt(localStorage.getItem("ws_fs")||"19",10); applyFs(Math.max(15,fs-1)); };
+try{ applyFs(parseInt(localStorage.getItem("ws_fs")||"19",10)); }catch(e){}
+
+var drawer = document.getElementById("tocDrawer"), mask = document.getElementById("mask");
+function closeToc(){ drawer.classList.remove("open"); mask.classList.remove("open"); }
+document.getElementById("tocBtn").onclick = function(){
+  drawer.classList.add("open"); mask.classList.add("open");
+};
+mask.onclick = closeToc;
+
+window.addEventListener("scroll", function(){
+  var h = document.documentElement;
+  var ratio = h.scrollTop / Math.max(1,(h.scrollHeight - h.clientHeight));
+  document.getElementById("progress").style.width = (ratio*100)+"%";
+});
+
+render(cur);
+</script>
+</body>
+</html>
